@@ -1,0 +1,67 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment folders
+.env
+.venv
+env/
+venv/
+.idea/
+.vscode/
+
+# PyInstaller
+*.manifest
+*.spec
+
+*.egg-info/
+ircones.egg-info/
+
+# MLflow
+mlruns/
+dominostats.json
+
+# Data and output artifacts
+artifacts/
+results/
+*.csv
+*.tsv
+*.json
+*.xlsx
+*.parquet
+*.feather
+*.h5
+
+# Logs
+*.log
+logs/
+
+# Unit test / coverage
+.coverage
+.tox/
+.nox/
+.cache/
+pytest_cache/
+coverage.xml
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Domino-specific
+output/
+.gitkeep
+
+# Ignore any `.trash` directories (anywhere)
+.trash/
+**/.trash/

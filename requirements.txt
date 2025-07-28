@@ -1,0 +1,5 @@
+streamlit
+st-pages
+streamlit-extras
+altair-saver
+-e /mnt/code
