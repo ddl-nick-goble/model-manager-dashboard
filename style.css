@@ -1,5 +1,0 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
-
-html, body, h1, h2, h3, h4, h5, h6 [class*="css"] {
-  font-family: 'Inter', sans-serif !important;
-}

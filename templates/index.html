@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domino Model Management Dashboard</title>
+    <script>
+        // Get the current path from the URL to handle proxy routing
+        const basePath = window.location.pathname.split('/proxy/')[0] + '/proxy/8501';
+        // Get project ID from server
+        const DOMINO_PROJECT_ID = "{{ project_id }}";
+    </script>
+    <link rel="stylesheet" type="text/css" href="./static/css/style.css">
+</head>
+<body>
+    <div class="main-layout">
+        <div class="container">
+            <!-- Welcome header -->
+            <h1 class="welcome-title">Model Management Dashboard</h1>
+
+            <!-- Navigation tabs -->
+            <nav class="nav-tabs">
+                <button class="tab active" data-filter="all">All Models</button>
+                <button class="tab" data-filter="production">Production</button>
+                <button class="tab" data-filter="development">In Development</button>
+                <button class="tab" data-filter="failed">Failed</button>
+                <button class="tab" data-filter="critical findings">Critical Findings</button>
+                <span class="view-all-link">View all →</span>
+            </nav>
+
+            <!-- Findings Summary Card -->
+            <div style="background: white; border-radius: 8px; padding: 16px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0 0 12px 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Outstanding Findings Summary</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+                </div>
+            </div>
+
+            <!-- Main table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Owner</th>
+                            <th>Status</th>
+                            <th>Risk Class</th>
+                            <th>Active Development</th>
+                            <th>Findings</th>
+                            <th>Dependencies</th>
+                            <th>External Access</th>
+                            <th>Health</th>
+                            <th>Last Run</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Table content will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="./static/js/main.js"></script>
+</body>
+</html>

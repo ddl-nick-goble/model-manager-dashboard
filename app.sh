@@ -1,68 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# to use, run PORT=8501 bash app.sh
-# run this if needed pkill -f streamlit
-
-# Default to prod port 8888, but allow override via ENV or CLI arg
+# usage: PORT=8501 bash app.sh
 PORT="${PORT:-${1:-8888}}"
 
-
-# Try to kill any existing Streamlit processes (ignore errors)
-if ! pkill -f streamlit 2>/dev/null; then
-  echo "No existing Streamlit process found."
+# 1) Kill anything listening on $PORT via fuser (works where ss/lsof aren’t available)
+if command -v fuser &>/dev/null; then
+  echo "Killing any process on port $PORT…"
+  fuser -k "${PORT}/tcp" || true
+  sleep 1
 else
-  echo "Previous Streamlit process killed."
+  echo "fuser not found, skipping port kill."
 fi
 
-mkdir -p .streamlit
+# 2) Also kill any stray Streamlit / Flask / app.py
+pkill -f streamlit 2>/dev/null && echo "Killed existing Streamlit processes."
+pkill -f flask      2>/dev/null && echo "Killed existing Flask processes."
+pkill -f app.py     2>/dev/null && echo "Killed existing app.py processes."
 
-cat > .streamlit/config.toml <<EOF
-[browser]
-gatherUsageStats = true
+# 3) Show the Domino proxy URL
+if [ -n "${DOMINO_RUN_HOST_PATH:-}" ]; then
+  CLEAN=$(echo "$DOMINO_RUN_HOST_PATH" | sed 's|/r||g')
+  URL="https://se-demo.domino.tech${CLEAN}proxy/${PORT}/"
+  echo "========================================="
+  echo "Flask URL: $URL"
+  echo "========================================="
+else
+  echo "DOMINO_RUN_HOST_PATH not set — running locally at http://0.0.0.0:${PORT}"
+fi
 
-[server]
-address = "0.0.0.0"
-port = $PORT
-enableCORS = false
-enableXsrfProtection = false
-
-[theme]
-primaryColor = "#543FDD"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#FAFAFA"
-textColor = "#2E2E38"
-EOF
-
-cat > .streamlit/pages.toml <<EOF
-[[pages]]
-path = "home_page.py"
-name = "Home"
-
-[[pages]]
-path = "rate_curves_page.py"
-name = "Rate Curves"
-
-[[pages]]
-path = "rate_curve_surface.py"
-name = "Rate Curve Surface"
-
-[[pages]]
-path = "rate_simulations_page.py"
-name = "Rate Simulations"
-
-[[pages]]
-path = "treasury_inventory.py"
-name = "Treasury Inventory"
-
-[[pages]]
-path = "treasury_risk.py"
-name = "Treasury Risk"
-
-[[pages]]
-path = "interest_rate_page.py"
-name = "Overnight Rates"
-EOF
-
-# Run the app
-streamlit run apps/dashboard.py
+# 4) Launch your Flask app
+export FLASK_APP=app.py
+python app.py
