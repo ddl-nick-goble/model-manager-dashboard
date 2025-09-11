@@ -23,14 +23,15 @@ async function fetchDominoBundles() {
             throw new Error(`Bundles API returned ${response.status}: ${response.statusText}`);
         }
         const bundlesData = await response.json();
-        // Filter bundles to only those with at least one policy whose name contains 'fitch' (case-insensitive)
+        // Filter bundles: must have at least one policy whose name contains 'fitch' (case-insensitive) AND not archived
         let filteredBundles = [];
         if (bundlesData && Array.isArray(bundlesData.data)) {
             filteredBundles = bundlesData.data.filter(bundle => {
+                if (bundle.state === 'Archived') return false;
                 if (!Array.isArray(bundle.policies)) return false;
                 return bundle.policies.some(policy =>
                     typeof policy.policyName === 'string' &&
-                    policy.policyName.toLowerCase().includes('fitch')
+                    policy.policyName.toLowerCase().includes('[fitch')
                 );
             });
             // Object keyed by bundle id for O(1) lookup
@@ -139,35 +140,36 @@ async function initializeDashboard() {
         console.log('Successfully loaded user:', userData.user.userName);
     }
 
-    // After bundles/evidence are loaded, build table rows from evidence
+    // Build table rows: one per bundle (key in evidence by bundle id)
     const tableRows = [];
     for (const bundleId in window.dominoEvidenceByBundleId) {
         const evidence = window.dominoEvidenceByBundleId[bundleId];
         const bundle = window.dominoBundlesById[bundleId];
-        if (evidence && evidence.models && Array.isArray(evidence.models)) {
-            evidence.models.forEach(model => {
-                tableRows.push({
-                    modelName: model.name || 'Unnamed Model',
-                    modelVersion: model.version || 'Unknown',
-                    bundleName: bundle?.name || 'Unknown Bundle',
-                    bundleId: bundleId,
-                    evidenceStatus: evidence.status || 'Unknown',
-                    evidenceCreated: evidence.createdAt || null,
-                    modelType: model.type || 'Unknown',
-                    owner: model.owner || null,
-                    status: model.status || 'Development',
-                    riskClass: model.riskClass || 'P3',
-                    activeDevelopment: model.activeDevelopment || false,
-                    findings: model.findings || [],
-                    dependencies: model.dependencies || [],
-                    externalAccess: model.externalAccess || false,
-                    health: model.health || '98.5',
-                    lastRun: model.lastRun || null,
-                    createdAt: model.createdAt || null
-                });
+        let item = null;
+        if (Array.isArray(evidence) && evidence.length > 0) {
+            item = evidence[0]; // Use first evidence item
+        }
+        if (item) {
+            tableRows.push({
+                modelName: item.artifactContent && typeof item.artifactContent === 'string' ? item.artifactContent : Array.isArray(item.artifactContent) ? item.artifactContent.join(', ') : '[Unknown]',
+                modelVersion: item.updatedAt || '-',
+                bundleName: bundle?.name || 'Unknown Bundle',
+                bundleId: bundleId,
+                evidenceStatus: item.evidenceId || '-',
+                evidenceCreated: item.updatedAt || '-',
+                modelType: '-',
+                owner: item.userId || null,
+                status: '-',
+                riskClass: '-',
+                activeDevelopment: false,
+                findings: [],
+                dependencies: [],
+                externalAccess: false,
+                health: '-',
+                lastRun: null,
+                createdAt: null
             });
         } else if (evidence && evidence.error) {
-            // Show error row for failed evidence fetch
             tableRows.push({
                 modelName: '[Evidence Error]',
                 modelVersion: '-',
@@ -189,7 +191,6 @@ async function initializeDashboard() {
             });
         }
     }
-
     if (tableRows.length > 0) {
         populateModelsTable(tableRows);
     } else {
