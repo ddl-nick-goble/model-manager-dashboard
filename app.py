@@ -2,15 +2,22 @@
 import os
 from flask import Flask, render_template, request
 from flask_cors import CORS
+from flask_cors import CORS
 
 app = Flask(__name__, static_url_path='/static')
 
 # Nuclear option - disable all CORS restrictions
-CORS(app, 
-     origins="*",
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-     allow_headers="*",
-     supports_credentials=True)
+ALLOWED_ORIGINS = os.environ.get("DOMINO_DOMAIN", "https://se-demo.domino.tech, https://apps.se-demo.domino.tech").split(",")
+
+CORS(
+    app,
+    origins=ALLOWED_ORIGINS,               # e.g. "https://se-demo.domino.tech"
+    supports_credentials=True,             # only if you truly need cookies/creds
+    methods=["GET","POST","PUT","DELETE","OPTIONS"],
+    allow_headers=["Authorization","Content-Type","X-Domino-Api-Key","Accept"]
+)
+
+# Remove the manual after_request CORS block to avoid conflicts
 
 @app.after_request
 def after_request(response):
