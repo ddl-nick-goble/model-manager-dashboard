@@ -55,7 +55,10 @@
             </div>
         </div>
     </div>
-
+    <script>
+      // POC runtime config injected by Flask
+      window.DOMINO = {{ DOMINO | tojson }};
+    </script>
     <script type="text/javascript" src="./static/js/main.js"></script>
 </body>
 </html>

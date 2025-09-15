@@ -1,43 +1,7 @@
-// Domino API Configuration - Environment-based
+// const DOMINO_API_BASE = window.DOMINO?.API_BASE || window.location.origin;
 const DOMINO_API_BASE = window.location.origin;
 
-// Get API key from environment variable or fallback
-function getDominoApiKey() {
-    // Option 1: Check if running in Domino environment with environment variables
-    if (typeof process !== 'undefined' && process.env && process.env.DOMINO_API_KEY) {
-        return process.env.DOMINO_API_KEY;
-    }
-    
-    // Option 2: Check for custom environment variable in browser context
-    // This would be set if the key was passed from backend
-    if (window.DOMINO_API_KEY) {
-        return window.DOMINO_API_KEY;
-    }
-    
-    // Option 3: For development/testing - use hardcoded fallback with warning
-    console.warn('Using hardcoded API key - this should be replaced with environment variable in production');
-    return '914d81ea8309f1dcb03ec63a4df82c66adad7fb9e5fbf6f24831fe7b59c7ab0b';
-}
-
-const API_KEY = getDominoApiKey();
-
-function getDominoApiKey() {
-    // Option 1: Check if running in Domino environment with environment variables
-    if (typeof process !== 'undefined' && process.env && process.env.DOMINO_API_KEY) {
-        return process.env.DOMINO_API_KEY;
-    }
-    
-    // Option 2: Check for custom environment variable in browser context
-    // This would be set if the key was passed from backend
-    if (window.DOMINO_API_KEY) {
-        return window.DOMINO_API_KEY;
-    }
-    
-    // Option 3: For development/testing - use hardcoded fallback with warning
-    console.warn('Using hardcoded API key - this should be replaced with environment variable in production');
-    return '914d81ea8309f1dcb03ec63a4df82c66adad7fb9e5fbf6f24831fe7b59c7ab0b';
-}
-
+const API_KEY = window.DOMINO?.API_KEY || null;
 
 // Global state - single source of truth
 let appState = {
@@ -81,7 +45,7 @@ async function fetchAllData() {
         // 3. Fetch all policies in parallel
         const policyPromises = Array.from(policyIds).map(async policyId => {
             try {
-                const response = await fetch(`https://se-demo.domino.tech/api/governance/v1/policies/${policyId}`, {
+                const response = await fetch(`${DOMINO_API_BASE}/api/governance/v1/policies/${policyId}`, {
                     headers: {
                         'X-Domino-Api-Key': API_KEY,
                         'accept': 'application/json'
@@ -98,7 +62,7 @@ async function fetchAllData() {
         // 4. Fetch all evidence in parallel
         const evidencePromises = filteredBundles.map(async bundle => {
             try {
-                const response = await fetch(`https://se-demo.domino.tech/api/governance/v1/drafts/latest?bundleId=${bundle.id}`, {
+                const response = await fetch(`${DOMINO_API_BASE}/api/governance/v1/drafts/latest?bundleId=${bundle.id}`, {
                     headers: {
                         'X-Domino-Api-Key': API_KEY,
                         'accept': 'application/json'
