@@ -7,7 +7,9 @@ from flask_cors import CORS
 app = Flask(__name__, static_url_path='/static')
 
 # Nuclear option - disable all CORS restrictions
-ALLOWED_ORIGINS = os.environ.get("DOMINO_DOMAIN", "https://se-demo.domino.tech, https://apps.se-demo.domino.tech").split(",")
+ALLOWED_ORIGINS = [os.environ.get("DOMINO_DOMAIN", "https://se-demo.domino.tech"), "https://apps.se-demo.domino.tech"]
+
+print('allowed origins...', ALLOWED_ORIGINS)
 
 CORS(
     app,
