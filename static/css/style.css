@@ -148,7 +148,7 @@ tr:last-child td {
     color: #065f46;
 }
 
-.status-validation {
+.status-testing {
     background: #fef3c7;
     color: #92400e;
 }
@@ -158,14 +158,14 @@ tr:last-child td {
     color: #1e40af;
 }
 
-.status-backtesting {
-    background: #e0e7ff;
-    color: #3730a3;
-}
-
-.status-failed {
+.status-on-hold {
     background: #fee2e2;
     color: #991b1b;
+}
+
+.status-deprecated {
+    background: #f3f4f6;
+    color: #374151;
 }
 
 /* Risk class badges */
