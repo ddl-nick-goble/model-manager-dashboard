@@ -2,4 +2,5 @@ streamlit
 st-pages
 streamlit-extras
 altair-saver
+flask-cors
 -e /mnt/code

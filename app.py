@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import os
 from flask import Flask, render_template, request
+from flask_cors import CORS
 
 app = Flask(__name__, static_url_path='/static')
+
+CORS(app, origins="*")
 
 @app.route("/_stcore/health")
 def health():
