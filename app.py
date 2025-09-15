@@ -14,7 +14,6 @@ print('allowed origins...', ALLOWED_ORIGINS)
 CORS(
     app,
     origins=ALLOWED_ORIGINS,               # e.g. "https://se-demo.domino.tech"
-    supports_credentials=True,             # only if you truly need cookies/creds
     methods=["GET","POST","PUT","DELETE","OPTIONS"],
     allow_headers=["Authorization","Content-Type","X-Domino-Api-Key","Accept"]
 )
