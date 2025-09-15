@@ -111,7 +111,15 @@ function processData() {
                         systemId: null,
                         applicationId: null,
                         applicationType: null,
-                        status: null
+                        significanceRisk: null,
+                        usageRisk: null,
+                        complexityRisk: null,
+                        userType: null,
+                        outputAuthorization: null,
+                        expiryDate: null,
+                        securityClassification: null,
+                        euAIActRisk: null,
+                        modelHealth: null
                     };
                 }
 
@@ -130,6 +138,10 @@ function processData() {
                 if (Array.isArray(bundleEvidence)) {
                     bundleEvidence.forEach(evidence => {
                         const externalId = getEvidenceExternalId(evidence, bundle.policies);
+
+                        if (externalId === 'system-name') {
+                            model.modelName = evidence.artifactContent;
+                        }
                         
                         // Find system-id evidence
                         if (externalId === 'system-id') {
@@ -146,6 +158,51 @@ function processData() {
                             model.serviceLevel = evidence.artifactContent;
                         }
 
+                        if (externalId === 'significance') {
+                            model.significanceRisk = evidence.artifactContent;
+                        }
+
+                        if (externalId === 'usage') {
+                            model.usageRisk = evidence.artifactContent;
+                        }
+
+                        if (externalId === 'complexity') {
+                            model.complexityRisk = evidence.artifactContent;
+                        }
+
+                        if (externalId === 'user-type') {
+                            model.userType = evidence.artifactContent;
+                        }
+
+                        if (externalId === 'output-authorization') {
+                            model.outputAuthorization = evidence.artifactContent;
+                        }
+
+                        if (externalId === 'expiry-date') {
+                            model.expiryDate = evidence.artifactContent;
+                        }
+
+                        if (externalId === 'Security-Classification-wa39') {
+                            model.securityClassification = evidence.artifactContent;
+                        }
+
+                        if (externalId === 'eu-ai-act-risk-level') {
+                            model.euAIActRisk = evidence.artifactContent;
+                        }
+
+                        if (externalId === 'Model-Upload-and-Health-zGg') {
+                            model.modelHealth = ((() => {
+                              const r = evidence.artifactContent?.[0]?.["model health"];
+                              if (typeof r === 'number') return r;
+                              if (r && typeof r === 'object') return r.value ?? r.health ?? 0;
+                              if (typeof r === 'string') {
+                                const m = r.match(/-?\d+(\.\d+)?/);              // handles "health: 0.9679"
+                                if (m) return parseFloat(m[0]);
+                                try { const o = JSON.parse(r); return o.value ?? o.health ?? 0; } catch { return 0; }
+                              }
+                              return 0;
+                            })() * 100).toFixed(2) + '%';
+                        }
                         
                         model.evidence.push({
                             ...evidence,
@@ -173,19 +230,23 @@ function processData() {
         modelVersion: model.applicationId || `n/a`,
         applicationType: model.applicationType || 'Unknown',
         serviceLevel: model.serviceLevel || 'Unknown',
+        significanceRisk: model.significanceRisk || 'n/a',
+        usageRisk: model.usageRisk || 'n/a',
+        complexityRisk: model.complexityRisk || 'n/a',
+        userType: model.userType || 'n/a',
+        outputAuthorization: model.outputAuthorization || 'n/a',
+        expiryDate: model.expiryDate || 'n/a',
+        securityClassification: model.securityClassification || 'n/a',
+        euAIActRisk: model.euAIActRisk || 'n/a',
+        modelHealth: model.modelHealth || 'n/a',
         bundleName: model.bundles[0]?.bundleName || 'Unknown',
         bundleId: model.bundles[0]?.bundleId || null,
         evidenceStatus: model.evidence[0]?.evidenceId || '-',
         evidenceCreated: model.evidence[0]?.updatedAt || '-',
         owner: model.evidence[0]?.userId || 'Unknown',
         createdAt: model.bundles[0]?.createdAt,
-        riskClass: 'P3',
-        health: '98.5',
-        activeDevelopment: false,
         findings: [],
         dependencies: [],
-        externalAccess: false,
-        lastRun: null
     }));
 
     console.log('Data processed:', { models: appState.models, tableData: appState.tableData });
@@ -227,17 +288,21 @@ function renderTable() {
                 <div class="model-name">${model.modelName}</div>
                 <div class="model-type">${model.modelVersion}</div>
             </td>
+            <td><span class="user-name">${model.applicationType}</span></td>
+            <td><span class="status-badge status-${model.serviceLevel?.toLowerCase().replace(/\s+/g, '-')}">${model.serviceLevel}</span></td>
+            <td><span class="risk-level" data-risk="${model.significanceRisk}">${model.significanceRisk}</span></td>
+            <td><span class="risk-level" data-risk="${model.usageRisk}">${model.usageRisk}</span></td>
+            <td><span class="risk-level" data-risk="${model.complexityRisk}">${model.complexityRisk}</span></td>
+            <td><span class="user-name">${model.userType}</span></td>
             <td>
-                    <span class="user-name">${model.applicationType}</span>
+              ${model.outputAuthorization
+                  ?.map(item => `<span class="pill">${item}</span>`)
+                  .join('')}
             </td>
-            <td><span class="status-badge status-${model.serviceLevel.toLowerCase().replace(/\s+/g, '-')}">${model.serviceLevel}</span></td>
-            <td><span class="risk-badge">${model.riskClass}</span></td>
-            <td><span class="dev-item">${model.activeDevelopment ? 'Active' : 'None'}</span></td>
-            <td><span class="no-findings">No Findings</span></td>
-            <td>None</td>
-            <td><span class="metric-value">${model.externalAccess ? 'Enabled' : 'Disabled'}</span></td>
-            <td><span class="metric-value">${model.health}%</span></td>
-            <td>${model.lastRun || 'Never'}</td>
+            <td><span class="user-name">${model.expiryDate}</span></td>
+            <td><span class="user-name">${model.securityClassification}</span></td>
+            <td><span class="user-name">${model.euAIActRisk}</span></td>
+            <td><span class="user-name">${model.modelHealth}</span></td>
             <td>
                 <button class="action-btn" onclick="toggleDetails(this, ${index})">
                     <span>Details</span>
@@ -301,8 +366,9 @@ function formatDate(date) {
 function toggleDetails(button, index) {
     const row = document.getElementById(`details-${index}`);
     const arrow = button.querySelector('.arrow');
+    const isCurrentlyOpen = row.classList.contains('show');
     
-    // Close all other rows
+    // Close all other rows first
     document.querySelectorAll('.expandable-row.show').forEach(r => r.classList.remove('show'));
     document.querySelectorAll('.arrow.rotated').forEach(a => a.classList.remove('rotated'));
     document.querySelectorAll('.action-btn.expanded').forEach(b => {
@@ -310,13 +376,8 @@ function toggleDetails(button, index) {
         b.querySelector('span').textContent = 'Details';
     });
     
-    // Toggle current row
-    if (row.classList.contains('show')) {
-        row.classList.remove('show');
-        arrow.classList.remove('rotated');
-        button.classList.remove('expanded');
-        button.querySelector('span').textContent = 'Details';
-    } else {
+    // If this row wasn't open, open it
+    if (!isCurrentlyOpen) {
         row.classList.add('show');
         arrow.classList.add('rotated');
         button.classList.add('expanded');

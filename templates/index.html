@@ -22,18 +22,11 @@
             <nav class="nav-tabs">
                 <button class="tab active" data-filter="all">All Models</button>
                 <button class="tab" data-filter="production">Production</button>
-                <button class="tab" data-filter="development">In Development</button>
-                <button class="tab" data-filter="failed">Failed</button>
-                <button class="tab" data-filter="critical findings">Critical Findings</button>
-                <span class="view-all-link">View all →</span>
+                <button class="tab" data-filter="development">Development</button>
+                <button class="tab" data-filter="testing">Testing</button>
+                <button class="tab" data-filter="on hold">On Hold</button>
             </nav>
 
-            <!-- Findings Summary Card -->
-            <div style="background: white; border-radius: 8px; padding: 16px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h3 style="margin: 0 0 12px 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Outstanding Findings Summary</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
-                </div>
-            </div>
 
             <!-- Main table -->
             <div class="table-container">
@@ -43,15 +36,16 @@
                                 <th>Application Name</th>
                                 <th>Application Type</th>
                                 <th>Service Level</th>
-                                <th>Risk Scores</th>
-                                <th>Significance</th>
-                                <th>Usage</th>
-                                <th>Complexity</th>
+                                <th>Significance Risk Score</th>
+                                <th>Usage Risk Score</th>
+                                <th>Complexity Risk Score</th>
                                 <th>User Type</th>
                                 <th>Output Authorization</th>
                                 <th>Expiry Date</th>
                                 <th>Security Classification</th>
                                 <th>EU AI Act Risk Level</th>
+                                <th>Model Health</th>
+                                <th></th>
                         </tr>
                     </thead>
                     <tbody>
