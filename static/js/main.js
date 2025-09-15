@@ -1,7 +1,43 @@
-// Domino API Configuration
+// Domino API Configuration - Environment-based
 const DOMINO_API_BASE = window.location.origin;
-const API_KEY = '914d81ea8309f1dcb03ec63a4df82c66adad7fb9e5fbf6f24831fe7b59c7ab0b';
-const PROJECT_ID = typeof DOMINO_PROJECT_ID !== 'undefined' ? DOMINO_PROJECT_ID : '';
+
+// Get API key from environment variable or fallback
+function getDominoApiKey() {
+    // Option 1: Check if running in Domino environment with environment variables
+    if (typeof process !== 'undefined' && process.env && process.env.DOMINO_API_KEY) {
+        return process.env.DOMINO_API_KEY;
+    }
+    
+    // Option 2: Check for custom environment variable in browser context
+    // This would be set if the key was passed from backend
+    if (window.DOMINO_API_KEY) {
+        return window.DOMINO_API_KEY;
+    }
+    
+    // Option 3: For development/testing - use hardcoded fallback with warning
+    console.warn('Using hardcoded API key - this should be replaced with environment variable in production');
+    return '914d81ea8309f1dcb03ec63a4df82c66adad7fb9e5fbf6f24831fe7b59c7ab0b';
+}
+
+const API_KEY = getDominoApiKey();
+
+function getDominoApiKey() {
+    // Option 1: Check if running in Domino environment with environment variables
+    if (typeof process !== 'undefined' && process.env && process.env.DOMINO_API_KEY) {
+        return process.env.DOMINO_API_KEY;
+    }
+    
+    // Option 2: Check for custom environment variable in browser context
+    // This would be set if the key was passed from backend
+    if (window.DOMINO_API_KEY) {
+        return window.DOMINO_API_KEY;
+    }
+    
+    // Option 3: For development/testing - use hardcoded fallback with warning
+    console.warn('Using hardcoded API key - this should be replaced with environment variable in production');
+    return '914d81ea8309f1dcb03ec63a4df82c66adad7fb9e5fbf6f24831fe7b59c7ab0b';
+}
+
 
 // Global state - single source of truth
 let appState = {
@@ -459,4 +495,4 @@ if (searchBox) {
     });
 }
 
-console.log('Dashboard initialized with Project ID:', PROJECT_ID);
+console.log('Dashboard initialized);
