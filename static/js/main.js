@@ -1,6 +1,6 @@
-// const DOMINO_API_BASE = window.DOMINO?.API_BASE || window.location.origin;
-const DOMINO_API_BASE = window.location.origin;
-
+// const DOMINO_API_BASE = window.location.origin;
+const DOMINO_API_BASE = window.DOMINO?.API_BASE || window.location.origin;
+console.log('using api base', DOMINO_API_BASE);
 const API_KEY = window.DOMINO?.API_KEY || null;
 
 // Global state - single source of truth

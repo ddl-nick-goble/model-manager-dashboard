@@ -17,7 +17,7 @@ def safe_domino_config():
     return {
         "PROJECT_ID": os.environ.get("DOMINO_PROJECT_ID", ""),
         "RUN_HOST_PATH": os.environ.get("DOMINO_RUN_HOST_PATH", ""),
-        "API_BASE": request.url_root.rstrip("/"),   # same-origin base
+        "API_BASE": os.environ.get("DOMINO_API_BASE", ""),
         "API_KEY": os.environ.get("DOMINO_API_KEY", ""),
     }
 
