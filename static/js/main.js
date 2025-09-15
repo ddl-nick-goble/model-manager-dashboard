@@ -495,4 +495,4 @@ if (searchBox) {
     });
 }
 
-console.log('Dashboard initialized);
+console.log('Dashboard initialized');
