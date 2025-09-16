@@ -310,6 +310,12 @@ tr:last-child td { border-bottom: none; }
 .arrow { transition: transform .15s ease; font-size: 10px; }
 .arrow.rotated { transform: rotate(180deg); }
 
+button:disabled,
+button.disabled {
+  opacity: 0.65 !important;
+  pointer-events: none;
+}
+
 /* ---------- Expandable rows ---------- */
 .expandable-row { display: none; }
 .expandable-row.show { display: table-row; }

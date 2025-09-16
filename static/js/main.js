@@ -343,8 +343,8 @@ function renderTable() {
                         </div>
                     </div>
                     <div class="actions-row">
-                        <button class="btn btn-primary">View Model</button>
-                        <button class="btn btn-secondary">Edit Settings</button>
+                        <button class="btn btn-primary" disabled>View Live Model Monitoring</button>
+                        <button class="btn btn-secondary" disabled>View Governing Bundles</button>
                     </div>
                 </div>
             </td>
