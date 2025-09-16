@@ -1,8 +1,11 @@
-// const DOMINO_API_BASE = window.location.origin;
-const DOMINO_API_BASE = window.DOMINO?.API_BASE || window.location.origin;
+// Use the full current URL path as the proxy base (includes Domino notebook proxy path)
+const DOMINO_API_BASE = window.location.origin + window.location.pathname.replace(/\/$/, '');
+const ORIGINAL_API_BASE = window.DOMINO?.API_BASE || '';
 console.log('window.DOMINO?.API_BASE', window.DOMINO?.API_BASE);
 console.log('window.location.origin', window.location.origin);
-console.log('using api base', DOMINO_API_BASE);
+console.log('window.location.pathname', window.location.pathname);
+console.log('using proxy base', DOMINO_API_BASE);
+console.log('proxying to', ORIGINAL_API_BASE);
 const API_KEY = window.DOMINO?.API_KEY || null;
 
 // Global state - single source of truth
@@ -14,16 +17,33 @@ let appState = {
     tableData: []
 };
 
+// Helper function to make proxy API calls
+async function proxyFetch(apiPath, options = {}) {
+    // Handle query parameters properly
+    const [basePath, queryString] = apiPath.split('?');
+    const targetParam = `target=${encodeURIComponent(ORIGINAL_API_BASE)}`;
+    const finalQuery = queryString ? `${queryString}&${targetParam}` : targetParam;
+    const url = `${DOMINO_API_BASE}/proxy/${basePath.replace(/^\//, '')}?${finalQuery}`;
+    
+    const defaultHeaders = {
+        'X-Domino-Api-Key': API_KEY,
+        'accept': 'application/json'
+    };
+    
+    return fetch(url, {
+        ...options,
+        headers: {
+            ...defaultHeaders,
+            ...options.headers
+        }
+    });
+}
+
 // API Functions
 async function fetchAllData() {
     try {
-        // 1. Fetch bundles
-        const bundlesResponse = await fetch(`${DOMINO_API_BASE}/api/governance/v1/bundles`, {
-            headers: {
-                'X-Domino-Api-Key': API_KEY,
-                'accept': 'application/json'
-            }
-        });
+        // 1. Fetch bundles via proxy
+        const bundlesResponse = await proxyFetch('api/governance/v1/bundles');
         
         if (!bundlesResponse.ok) throw new Error(`Bundles API: ${bundlesResponse.status}`);
         const bundlesData = await bundlesResponse.json();
@@ -44,15 +64,10 @@ async function fetchAllData() {
             });
         });
 
-        // 3. Fetch all policies in parallel
+        // 3. Fetch all policies in parallel via proxy
         const policyPromises = Array.from(policyIds).map(async policyId => {
             try {
-                const response = await fetch(`${DOMINO_API_BASE}/api/governance/v1/policies/${policyId}`, {
-                    headers: {
-                        'X-Domino-Api-Key': API_KEY,
-                        'accept': 'application/json'
-                    }
-                });
+                const response = await proxyFetch(`api/governance/v1/policies/${policyId}`);
                 if (response.ok) {
                     appState.policies[policyId] = await response.json();
                 }
@@ -61,15 +76,10 @@ async function fetchAllData() {
             }
         });
 
-        // 4. Fetch all evidence in parallel
+        // 4. Fetch all evidence in parallel via proxy
         const evidencePromises = filteredBundles.map(async bundle => {
             try {
-                const response = await fetch(`${DOMINO_API_BASE}/api/governance/v1/drafts/latest?bundleId=${bundle.id}`, {
-                    headers: {
-                        'X-Domino-Api-Key': API_KEY,
-                        'accept': 'application/json'
-                    }
-                });
+                const response = await proxyFetch(`api/governance/v1/drafts/latest?bundleId=${bundle.id}`);
                 if (response.ok) {
                     appState.evidence[bundle.id] = await response.json();
                 }
@@ -297,9 +307,9 @@ function renderTable() {
             <td><span class="risk-level" data-risk="${model.complexityRisk}">${model.complexityRisk}</span></td>
             <td><span class="user-name">${model.userType}</span></td>
             <td>
-              ${model.outputAuthorization
-                  ?.map(item => `<span class="pill">${item}</span>`)
-                  .join('')}
+              ${Array.isArray(model.outputAuthorization)
+                  ? model.outputAuthorization.map(item => `<span class="pill">${item}</span>`).join('')
+                  : `<span class="user-name">${model.outputAuthorization}</span>`}
             </td>
             <td><span class="user-name">${model.expiryDate}</span></td>
             <td><span class="user-name">${model.securityClassification}</span></td>

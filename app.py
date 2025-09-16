@@ -3,29 +3,11 @@ import os
 import requests
 from urllib.parse import urljoin
 from flask import Flask, render_template, request, Response
-from flask_cors import CORS
 
 app = Flask(__name__, static_url_path='/static')
 
-# Only the front-end origin needs to call this app
-ALLOWED_ORIGINS = list(set([o.strip() for o in set([os.environ.get(
-    "DOMINO_DOMAIN",
-    "https://apps.se-demo.domino.tech"
-),     "https://apps.se-demo.domino.tech",     "https://se-demo.domino.tech"])
-]))
 
-print("ALLOWED_ORIGINS:", ALLOWED_ORIGINS)
-
-CORS(
-    app,
-    origins=ALLOWED_ORIGINS,
-    supports_credentials=False,  # set True only if you actually use cookies
-    methods=["GET","POST","PUT","DELETE","OPTIONS","PATCH"],
-    allow_headers=["Authorization","Content-Type","X-Domino-Api-Key","Accept"]
-)
-
-DOMINO_DOMAIN = os.environ.get("DOMINO_DOMAIN", "https://se-demo.domino.tech").rstrip("/")
-print('domino domain here', DOMINO_DOMAIN)
+DOMINO_DOMAIN = os.environ.get("DOMINO_DOMAIN", "")
 DOMINO_API_KEY = os.environ.get("DOMINO_API_KEY", "")
 
 # ---- Health stubs Domino pokes ----
@@ -37,52 +19,64 @@ def health():
 def host_config():
     return "", 200
 
-# ---- SAME-ORIGIN PROXY → kills browser CORS ----
-@app.route("/proxy/governance/<path:path>", methods=["GET","POST","PUT","DELETE","PATCH","OPTIONS"])
-def proxy_governance(path):
-    # CORS preflight; Flask-CORS will add headers
+@app.route("/proxy/<path:path>", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+def proxy_request(path):
     if request.method == "OPTIONS":
-        return ("", 204)
+        return "", 204
+    
+    # Get target URL from query param or header
+    target_base = request.args.get('target') or request.headers.get('X-Target-URL')
+    if not target_base:
+        return {"error": "Missing target URL. Use ?target=https://api.example.com or X-Target-URL header"}, 400
+    
+    # Build upstream URL
+    upstream_url = urljoin(target_base.rstrip("/") + "/", path)
+    
+    # Forward headers (exclude hop-by-hop headers)
+    forward_headers = {}
+    skip_headers = {"host", "content-length", "transfer-encoding", "connection", "keep-alive"}
+    
+    for key, value in request.headers:
+        if key.lower() not in skip_headers:
+            forward_headers[key] = value
+    
+    try:
+        # Make the upstream request
+        resp = requests.request(
+            method=request.method,
+            url=upstream_url,
+            params=request.args,
+            data=request.get_data(),
+            headers=forward_headers,
+            timeout=30,
+            stream=True
+        )
+        
+        # Forward response headers (exclude hop-by-hop)
+        response_headers = []
+        hop_by_hop = {"content-encoding", "transfer-encoding", "connection", "keep-alive"}
+        
+        for key, value in resp.headers.items():
+            if key.lower() not in hop_by_hop:
+                response_headers.append((key, value))
+        
+        return Response(
+            resp.iter_content(chunk_size=8192),
+            status=resp.status_code,
+            headers=response_headers,
+            direct_passthrough=True
+        )
+        
+    except requests.RequestException as e:
+        return {"error": f"Proxy request failed: {str(e)}"}, 502
 
-    upstream = urljoin(DOMINO_DOMAIN + "/", f"api/governance/v1/{path}")
-
-    # Only send what we intend upstream
-    fwd_headers = {
-        "X-Domino-Api-Key": DOMINO_API_KEY,
-        "Accept": request.headers.get("Accept", "application/json"),
-        "Content-Type": request.headers.get("Content-Type", "application/json"),
-    }
-
-    resp = requests.request(
-        method=request.method,
-        url=upstream,
-        params=request.args,          # ?bundleId=...
-        data=request.get_data(),      # body passthrough
-        headers=fwd_headers,
-        timeout=60,
-        stream=True
-    )
-
-    # Build a clean streaming response back to browser
-    hop_by_hop = {"content-encoding","transfer-encoding","connection","keep-alive"}
-    passthrough = [(k, v) for k, v in resp.raw.headers.items() if k.lower() not in hop_by_hop]
-
-    return Response(
-        resp.iter_content(chunk_size=8192),
-        status=resp.status_code,
-        headers=passthrough,
-        content_type=resp.headers.get("Content-Type"),
-        direct_passthrough=True
-    )
 
 # ---- Page routes ----
 def safe_domino_config():
     return {
         "PROJECT_ID": os.environ.get("DOMINO_PROJECT_ID", ""),
         "RUN_HOST_PATH": os.environ.get("DOMINO_RUN_HOST_PATH", ""),
-        # Kept for reference, but your JS will hit the proxy now:
         "API_BASE": DOMINO_DOMAIN,
-        # Keep the key server-side; don’t expose it to JS anymore
         "API_KEY": os.environ.get("DOMINO_API_KEY", ""),   
     }
 
