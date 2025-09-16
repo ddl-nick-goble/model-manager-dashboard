@@ -83,9 +83,12 @@ def proxy_request(path):
     # Build upstream URL
     upstream_url = urljoin(target_base.rstrip("/") + "/", path)
     
-    # Forward headers (exclude hop-by-hop headers)
+    # Forward headers (exclude hop-by-hop headers and conflicting auth)
     forward_headers = {}
-    skip_headers = {"host", "content-length", "transfer-encoding", "connection", "keep-alive"}
+    skip_headers = {
+        "host", "content-length", "transfer-encoding", "connection", "keep-alive",
+        "authorization"  # Skip this - conflicts with X-Domino-Api-Key
+    }
     
     for key, value in request.headers:
         if key.lower() not in skip_headers:
