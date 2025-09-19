@@ -1,9 +1,1 @@
-streamlit==1.49.1
-st-pages==1.0.1
-streamlit-extras==0.4.0
-altair-saver==0.5.0
-flask-cors==6.0.1
-protobuf==4.25.8
-urllib3>=2.0,<3.0
-semgrep==1.137.0
 -e /mnt/code
