@@ -448,3 +448,325 @@ button.disabled {
 .risk-level[data-risk="10"] {
   background: var(--stop-bg); color: var(--stop-fg); border-color: color-mix(in srgb, var(--stop-fg) 20%, transparent);
 }
+
+/* Security Scan Styles */
+
+/* Security scan button styling */
+.security-scan-btn {
+    background-color: #f39c12;
+    border-color: #f39c12;
+    color: white;
+}
+
+.security-scan-btn:hover {
+    background-color: #e67e22;
+    border-color: #e67e22;
+}
+
+.security-scan-btn:disabled {
+    background-color: #bdc3c7;
+    border-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+/* Spinner animation for loading state */
+.spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 5px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Security scan results container */
+.security-scan-container {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    background-color: #fafbfc;
+}
+
+.security-scan-results {
+    font-family: inherit;
+}
+
+.security-scan-results h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+}
+
+/* Scan summary statistics */
+.scan-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 6px;
+    border: 1px solid #e1e8ed;
+}
+
+.scan-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.stat-value.stat-success {
+    color: #27ae60;
+}
+
+.stat-value.stat-warning {
+    color: #f39c12;
+}
+
+.stat-value.stat-danger {
+    color: #e74c3c;
+}
+
+/* Scan details section */
+.scan-details {
+    margin-top: 15px;
+}
+
+.scan-details h5 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #34495e;
+    font-weight: 600;
+}
+
+.issues-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e1e8ed;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.issue-item {
+    padding: 12px;
+    border-bottom: 1px solid #f1f3f4;
+    position: relative;
+}
+
+.issue-item:last-child {
+    border-bottom: none;
+}
+
+.issue-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: #bdc3c7;
+}
+
+.issue-item.severity-high::before {
+    background-color: #e74c3c;
+}
+
+.issue-item.severity-medium::before {
+    background-color: #f39c12;
+}
+
+.issue-item.severity-low::before {
+    background-color: #f1c40f;
+}
+
+.issue-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.issue-file {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 11px;
+    color: #7f8c8d;
+    margin-bottom: 6px;
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.issue-message {
+    font-size: 12px;
+    color: #5d6d7e;
+    line-height: 1.4;
+}
+
+.more-issues {
+    padding: 10px;
+    text-align: center;
+    font-size: 12px;
+    color: #7f8c8d;
+    font-style: italic;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e1e8ed;
+}
+
+/* No issues found */
+.no-issues {
+    padding: 20px;
+    text-align: center;
+    color: #27ae60;
+    font-weight: 500;
+    background-color: #d5f4e6;
+    border: 1px solid #27ae60;
+    border-radius: 4px;
+}
+
+/* Scan timestamp */
+.scan-timestamp {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e1e8ed;
+    text-align: right;
+}
+
+.scan-timestamp small {
+    color: #95a5a6;
+    font-size: 11px;
+}
+
+/* Error state */
+.security-scan-error {
+    padding: 15px;
+    background-color: #fdf2f2;
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    color: #c0392b;
+}
+
+.security-scan-error h4 {
+    margin: 0 0 10px 0;
+    color: #c0392b;
+    font-size: 16px;
+}
+
+.security-scan-error p {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+.security-scan-error button {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.security-scan-error button:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .scan-summary {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .scan-stat {
+        flex-direction: row;
+        justify-content: space-between;
+        min-width: auto;
+    }
+    
+    .issues-list {
+        max-height: 200px;
+    }
+    
+    .issue-item {
+        padding: 8px;
+    }
+}
+
+/* Integration with existing expandable content */
+.expandable-content .security-scan-container {
+    margin-top: 20px;
+}
+
+.expandable-content .actions-row .security-scan-btn {
+    margin-left: 10px;
+}
+
+/* Dark mode support (if your app uses it) */
+@media (prefers-color-scheme: dark) {
+    .security-scan-container {
+        background-color: #2c3e50;
+        border-color: #34495e;
+    }
+    
+    .security-scan-results h4 {
+        color: #ecf0f1;
+        border-bottom-color: #3498db;
+    }
+    
+    .scan-summary {
+        background-color: #34495e;
+        border-color: #4a5f7a;
+    }
+    
+    .stat-value {
+        color: #ecf0f1;
+    }
+    
+    .issues-list {
+        background-color: #34495e;
+        border-color: #4a5f7a;
+    }
+    
+    .issue-item {
+        border-bottom-color: #4a5f7a;
+    }
+    
+    .issue-title {
+        color: #ecf0f1;
+    }
+    
+    .issue-file {
+        background-color: #2c3e50;
+        color: #bdc3c7;
+    }
+    
+    .issue-message {
+        color: #bdc3c7;
+    }
+}

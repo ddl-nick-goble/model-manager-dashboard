@@ -1,4 +1,4 @@
-// Use the full current URL path as the proxy base (includes Domino notebook proxy path)
+// static/js/main.js
 const DOMINO_API_BASE = window.location.origin + window.location.pathname.replace(/\/$/, '');
 const ORIGINAL_API_BASE = window.DOMINO?.API_BASE || '';
 console.log('window.DOMINO?.API_BASE', window.DOMINO?.API_BASE);
@@ -14,7 +14,8 @@ let appState = {
     policies: {},
     evidence: {},
     models: {},
-    tableData: []
+    tableData: [],
+    securityScans: {} // Store security scan results by experiment ID
 };
 
 // Helper function to make proxy API calls
@@ -38,6 +39,145 @@ async function proxyFetch(apiPath, options = {}) {
         }
     });
 }
+
+// Security scan functions
+async function triggerSecurityScan(modelName, modelVersion) {
+    try {
+        const basePath = window.location.pathname.replace(/\/$/, '');
+        const response = await fetch(`${basePath}/security-scan-model`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                modelName: modelName,
+                version: modelVersion,
+                fileRegex: ".*",
+                excludeRegex: "(^|/)(node_modules|\\.git|\\.venv|venv|env|__pycache__|\\.ipynb_checkpoints)(/|$)",
+                semgrepConfig: "auto",
+                includeIssues: true
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Security scan failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        // Transform the response to match your display function expectations
+        const transformedResult = {
+            total_issues: result.scan?.total || 0,
+            high_severity: result.scan?.high || 0,
+            medium_severity: result.scan?.medium || 0,
+            low_severity: result.scan?.low || 0,
+            issues: result.issues || [],
+            timestamp: Date.now()
+        };
+        
+        return transformedResult;
+    } catch (error) {
+        console.error('Security scan error:', error);
+        throw error;
+    }
+}
+
+function showSecurityScanSpinner(buttonElement) {
+    const originalText = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<span class="spinner"></span> Scanning...';
+    buttonElement.disabled = true;
+    return originalText;
+}
+
+function hideSecurityScanSpinner(buttonElement, originalText) {
+    buttonElement.innerHTML = originalText;
+    buttonElement.disabled = false;
+}
+
+function displaySecurityScanResults(results, containerElement) {
+    const resultsHtml = `
+        <div class="security-scan-results">
+            <h4>Security Scan Results</h4>
+            <div class="scan-summary">
+                <div class="scan-stat">
+                    <span class="stat-label">Total Issues:</span>
+                    <span class="stat-value ${results.total_issues > 0 ? 'stat-warning' : 'stat-success'}">
+                        ${results.total_issues || 0}
+                    </span>
+                </div>
+                <div class="scan-stat">
+                    <span class="stat-label">High Severity:</span>
+                    <span class="stat-value ${(results.high_severity || 0) > 0 ? 'stat-danger' : 'stat-success'}">
+                        ${results.high_severity || 0}
+                    </span>
+                </div>
+                <div class="scan-stat">
+                    <span class="stat-label">Medium Severity:</span>
+                    <span class="stat-value ${(results.medium_severity || 0) > 0 ? 'stat-warning' : 'stat-success'}">
+                        ${results.medium_severity || 0}
+                    </span>
+                </div>
+                <div class="scan-stat">
+                    <span class="stat-label">Low Severity:</span>
+                    <span class="stat-value">${results.low_severity || 0}</span>
+                </div>
+            </div>
+            ${results.issues && results.issues.length > 0 ? `
+                <div class="scan-details">
+                    <h5>Issues Found:</h5>
+                    <div class="issues-list">
+                        ${results.issues.slice(0, 5).map(issue => `
+                            <div class="issue-item severity-${issue.severity?.toLowerCase() || 'unknown'}">
+                                <div class="issue-title">${issue.test_name || 'Unknown Issue'}</div>
+                                <div class="issue-file">${issue.filename || 'Unknown file'}:${issue.line_number || 'N/A'}</div>
+                                <div class="issue-message">${issue.issue_text || 'No description available'}</div>
+                            </div>
+                        `).join('')}
+                        ${results.issues.length > 5 ? `
+                            <div class="more-issues">
+                                ... and ${results.issues.length - 5} more issues
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            ` : '<div class="no-issues">No security issues found!</div>'}
+            <div class="scan-timestamp">
+                <small>Scanned: ${new Date(results.timestamp || Date.now()).toLocaleString()}</small>
+            </div>
+        </div>
+    `;
+    
+    containerElement.innerHTML = resultsHtml;
+}
+
+async function handleSecurityScan(modelName, modelVersion, buttonElement) {
+    const resultsContainer = buttonElement.parentElement.querySelector('.security-scan-container') || 
+                           (() => {
+                               const container = document.createElement('div');
+                               container.className = 'security-scan-container';
+                               buttonElement.parentElement.appendChild(container);
+                               return container;
+                           })();
+    
+    
+    const originalText = showSecurityScanSpinner(buttonElement);
+    
+    try {
+        const results = await triggerSecurityScan(modelName, modelVersion);
+        displaySecurityScanResults(results, resultsContainer);
+    } catch (error) {
+        resultsContainer.innerHTML = `
+            <div class="security-scan-error">
+                <h4>Security Scan Failed</h4>
+                <p>Error: ${error.message}</p>
+                <button onclick="handleSecurityScan('${modelName}', ${modelVersion}, this.parentElement.parentElement.querySelector('.security-scan-btn'))" class="btn btn-secondary">Retry Scan</button>
+            </div>
+        `;
+    } finally {
+        hideSecurityScanSpinner(buttonElement, originalText);
+    }
+}
+
 
 // API Functions
 async function fetchAllData() {
@@ -100,14 +240,14 @@ async function fetchAllData() {
     }
 }
 
-// Data Processing - single function to create all derived data
-function processData() {
+// Data Processing - enhanced to capture experiment IDs
+async function processData() {
     appState.models = {};
     appState.tableData = [];
 
     // Process each bundle to extract model data
-    appState.bundles.forEach(bundle => {
-        bundle.attachments?.forEach(attachment => {
+    for (const bundle of appState.bundles) {
+        for (const attachment of bundle.attachments || []) {
             if (attachment.type === 'ModelVersion' && attachment.identifier) {
                 const modelKey = `${attachment.identifier.name}_v${attachment.identifier.version}`;
                 
@@ -115,11 +255,13 @@ function processData() {
                 if (!appState.models[modelKey]) {
                     appState.models[modelKey] = {
                         modelName: attachment.identifier.name,
+                        dominoModelName: attachment.identifier.name,
                         modelVersion: attachment.identifier.version,
                         modelKey: modelKey,
                         bundles: [],
                         evidence: [],
                         policies: [],
+                        experimentId: null, // Add experiment ID
                         systemId: null,
                         applicationId: null,
                         applicationType: null,
@@ -136,6 +278,17 @@ function processData() {
                 }
 
                 const model = appState.models[modelKey];
+
+                // Get experiment ID from the registered model
+                try {
+                    const modelResponse = await proxyFetch(`api/registeredmodels/v1/${attachment.identifier.name}/versions/${attachment.identifier.version}`);
+                    if (modelResponse.ok) {
+                        const modelDetails = await modelResponse.json();
+                        model.experimentId = modelDetails.experimentRunId;
+                    }
+                } catch (error) {
+                    console.error(`Failed to fetch experiment ID for ${modelKey}:`, error);
+                }
 
                 // Add bundle info
                 model.bundles.push({
@@ -233,13 +386,15 @@ function processData() {
                     });
                 });
             }
-        });
-    });
+        }
+    }
 
-    // Create table data
+    // Create table data - include experiment ID
     appState.tableData = Object.values(appState.models).map(model => ({
         modelName: model.modelName,
-        modelVersion: model.applicationId || `n/a`,
+        modelVersion: model.modelVersion,
+        dominoModelName: model.dominoModelName,
+        applicationId: model.applicationId || `n/a`,
         applicationType: model.applicationType || 'Unknown',
         serviceLevel: model.serviceLevel || 'Unknown',
         significanceRisk: model.significanceRisk || 'n/a',
@@ -257,6 +412,7 @@ function processData() {
         evidenceCreated: model.evidence[0]?.updatedAt || '-',
         owner: model.evidence[0]?.userId || 'Unknown',
         createdAt: model.bundles[0]?.createdAt,
+        experimentId: model.experimentId, // Include experiment ID
         findings: [],
         dependencies: [],
     }));
@@ -278,7 +434,8 @@ function getEvidenceExternalId(evidence, bundlePolicies) {
     return null;
 }
 
-// Rendering Functions
+// Enhanced rendering function with security scan button
+// Enhanced rendering function with security scan button
 function renderTable() {
     const tbody = document.querySelector('.table-container tbody');
     if (!tbody) return;
@@ -298,7 +455,7 @@ function renderTable() {
         <tr>
             <td>
                 <div class="model-name">${model.modelName}</div>
-                <div class="model-type">${model.modelVersion}</div>
+                <div class="model-type">${model.applicationId}</div>
             </td>
             <td><span class="user-name">${model.applicationType}</span></td>
             <td><span class="status-badge status-${model.serviceLevel?.toLowerCase().replace(/\s+/g, '-')}">${model.serviceLevel}</span></td>
@@ -323,13 +480,13 @@ function renderTable() {
             </td>
         </tr>
         <tr id="details-${index}" class="expandable-row">
-            <td colspan="11">
+            <td colspan="13">
                 <div class="expandable-content">
                     <div class="detail-section">
                         <h3>Model Details</h3>
                         <div class="detail-grid">
                             <div class="detail-item">
-                                <div class="detail-label">Version</div>
+                                <div class="detail-label">Registered Model Version</div>
                                 <div class="detail-value">${model.modelVersion}</div>
                             </div>
                             <div class="detail-item">
@@ -340,12 +497,28 @@ function renderTable() {
                                 <div class="detail-label">Bundle</div>
                                 <div class="detail-value">${model.bundleName}</div>
                             </div>
+                            ${model.experimentId ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Experiment ID</div>
+                                    <div class="detail-value"><code>${model.experimentId}</code></div>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
-                    <div class="actions-row">
-                        <button class="btn btn-primary" disabled>View Live Model Monitoring</button>
-                        <button class="btn btn-secondary" disabled>View Governing Bundles</button>
-                    </div>
+                        <div class="actions-row">
+                            <button class="btn btn-primary" disabled>View Live Model Monitoring</button>
+                            <button class="btn btn-secondary" disabled>View Governing Bundles</button>
+                            
+                            ${model.modelName && model.modelVersion
+                                ? `
+                                    <button class="btn btn-warning security-scan-btn"
+                                        onclick="handleSecurityScan('${model.dominoModelName}', '${model.modelVersion}', this)">
+                                        Run Security Scan
+                                    </button>
+                                `
+                                : '<button class="btn btn-secondary" disabled>No Model Name / Version</button>'
+                            }
+                        </div>
                 </div>
             </td>
         </tr>
@@ -419,8 +592,8 @@ async function initializeDashboard() {
     const success = await fetchAllData();
     
     if (success) {
-        // 2. Process data once
-        processData();
+        // 2. Process data once (now async to fetch experiment IDs)
+        await processData();
         
         // 3. Render table
         renderTable();
