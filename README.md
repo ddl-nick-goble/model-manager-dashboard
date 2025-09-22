@@ -1,105 +1,177 @@
-# FSI Risk Modeling
+# Model Governance Dashboard
 
-This repository contains a modular quantitative research toolkit developed to support model development, validation, and deployment within the investment ecosystem. It provides a shared foundation for quants, model validators, and technologists to collaborate on research workflows in a governed, production-aligned environment.  
+A Flask-based web application for monitoring and managing ML model governance, compliance, and security scanning.
 
----
+## Features
 
-## 🔍 Purpose
+- **Model Governance Overview**: View registered models with governance bundles and policies
+- **Risk Assessment**: Display significance, usage, and complexity risk levels
+- **Compliance Tracking**: EU AI Act risk levels, security classifications, expiry dates
+- **Security Scanning**: Integrated Semgrep-based security analysis for model artifacts
+- **Real-time Monitoring**: Model health metrics and experiment tracking
+- **Interactive Dashboard**: Expandable details, filtering, and search functionality
 
-The `quant-lib` project enables quantitative teams to:
-- Rapidly prototype and validate financial models in Python 
-- Leverage consistent data structures and model interfaces
-- Track model performance over time with MLflow
-- Run workflows across sandbox, staging, and production environments
+## Project Structure
 
----
+```
+├── app.py                 # Main Flask application
+├── app.sh                 # Launch script
+├── security_check.py      # Security scanning logic
+├── requirements.txt       # Python dependencies
+├── templates/
+│   └── index.html         # Main dashboard template
+├── static/
+│   ├── css/
+│   │   └── style.css      # Dashboard styling
+│   └── js/
+│       └── main.js        # Frontend application logic
+└── README.md
+```
 
-## 📁 Directory Overview
-data/ – Input datasets, config files, processed outputs
+## Installation
 
-models/ – Core model implementations (curve, pricing, risk, etc.)
+1. **Clone and setup environment**:
+```bash
+git clone <repository-url>
+cd <project-directory>
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-notebooks/ – Interactive analysis, validation, and exploratory work
+2. **Install dependencies**:
+```bash
+pip install -r requirements.txt
+```
 
-scripts/ – Executable CLI tools and batch model runners
+3. **Configure environment**:
+Create `.env` file or export variables:
+```bash
+export DOMINO_API_BASE="https://your-domino-instance.com"
+export DOMINO_API_KEY="your-api-key"
+export PORT=8501
+```
 
-tests/ – Unit and integration tests for model reliability
+## Usage
 
-utils/ – Common utilities: date math, SQL, plotting helpers
+### Development Server
+```bash
+PORT=8501 bash app.sh
+```
 
-docs/ – Methodology, assumptions, governance documentation
+### Production Deployment
+```bash
+gunicorn --bind 0.0.0.0:8501 app:app
+```
 
-environments/ – Environment files for sandbox/staging/production
+Access the dashboard at `http://localhost:8501`
 
+## API Endpoints
 
+### Core Routes
+- `GET /` - Main dashboard interface
+- `GET /proxy/<path:path>` - Proxy requests to Domino API
+- `POST /security-scan-model` - Trigger security scans
 
----
+### Security Scanning
+The application integrates with Semgrep for static code analysis:
 
-## 🚦 Environments
+```python
+# Trigger scan via POST to /security-scan-model
+{
+    "modelName": "model-name",
+    "version": "1.0",
+    "fileRegex": ".*",
+    "excludeRegex": "(node_modules|\\.git|\\.venv|__pycache__)",
+    "semgrepConfig": "auto",
+    "includeIssues": true
+}
+```
 
-This repo supports development and deployment across three standardized environments:
+## Configuration
 
-| Environment | Description |
-|-------------|-------------|
-| **Sandbox** | For exploratory development, prototyping, and experimentation by quantitative researchers. |
-| **Staging** | Used by model validators and reviewers for formal testing, validation, and governance review. |
-| **Production** | Stable environment for executing approved models with full data access and monitoring. |
+### Environment Variables
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DOMINO_API_BASE` | Domino platform API base URL | Required |
+| `DOMINO_API_KEY` | API authentication key | Required |
+| `PORT` | Server port | 8501 |
+| `FLASK_ENV` | Flask environment | production |
 
-Environment configuration is driven by environment variables and project structure. See [`docs/environment_setup_instructions.md`](docs/environment_setup_instructions.md) for more.
+### Frontend Configuration
+The JavaScript application automatically detects the proxy configuration and routes API calls through the Flask backend to avoid CORS issues.
 
----
+## Data Flow
 
-## 🛠️ Key Features
+1. **Data Fetching**: Retrieves governance bundles, policies, and evidence from Domino API
+2. **Data Processing**: Extracts model metadata, risk assessments, and compliance information
+3. **Rendering**: Displays interactive table with expandable details
+4. **Security Integration**: On-demand security scanning with result visualization
 
-- 📈 PCA and other curve modeling utilities
-- 🧮 Closed-form and Monte Carlo pricing engines
-- 🧾 Structured model logging and artifact tracking with MLflow
-- 🔍 Built-in support for DV01, factor exposures, and stress testing
-- ✅ Validation-ready with test coverage and assumptions tracking
+## Key Features
 
----
+### Model Governance Table
+- Model name and version information
+- Application type and service levels
+- Risk assessments (significance, usage, complexity)
+- Compliance status (EU AI Act, security classification)
+- Model health metrics
 
-## 🚀 Getting Started
+### Security Scanning
+- Static code analysis using Semgrep
+- Severity-based issue categorization (High/Medium/Low)
+- File-level vulnerability reporting
+- Configurable scan patterns and exclusions
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-org/quant-lib.git
-   cd quant-lib
-2. Set up your environment:
-   ```bash
-    conda env create -f environments/sandbox.yaml  # or staging.yaml / production.yaml
-    conda activate quant-lib
-3. Run a demo script:
-   ```bash
-    python scripts/run_rolling_pca.py 2024-12-31
+### Interactive Features
+- Real-time search and filtering
+- Expandable row details
+- Tab-based status filtering
+- Responsive design
 
----
+## Development
 
-## 🧪 Testing
+### Adding New Features
+1. Backend routes in `app.py`
+2. Security logic in `security_check.py`  
+3. Frontend interactions in `static/js/main.js`
+4. Styling in `static/css/style.css`
 
-Run all unit tests:
-  ```bash
-  pytest tests/
-  ```
+### API Integration
+The app uses a proxy pattern to handle Domino API calls:
+```javascript
+// Frontend makes calls to local proxy
+const response = await proxyFetch('api/governance/v1/bundles');
 
----
+// Flask proxies to actual Domino instance
+@app.route('/proxy/<path:path>')
+def proxy_request(path):
+    # Forwards to DOMINO_API_BASE with authentication
+```
 
-## 📄 Governance & Documentation
+## Security Considerations
 
-Refer to the docs/ directory for:
+- API keys are handled server-side only
+- Input validation on security scan parameters
+- File pattern restrictions for security scanning
+- CORS handling through proxy architecture
 
-Methodology explanations
+## Troubleshooting
 
-Model limitations
+### Common Issues
+1. **API Connection**: Verify `DOMINO_API_BASE` and `DOMINO_API_KEY`
+2. **Port Conflicts**: Change `PORT` environment variable
+3. **Missing Data**: Check Domino instance connectivity and permissions
+4. **Security Scans Failing**: Ensure Semgrep is properly installed
 
-Assumptions tracking
+### Debug Mode
+```bash
+FLASK_ENV=development python app.py
+```
 
-Governance workflows
+## License
 
-All production models must go through staging validation and be tagged for release.
+[Add your license information here]
 
-## 👥 Contributors
-This project is maintained by Quantitative Research and Model Governance teams, in collaboration with internal engineering partners.
+## Contributing
 
-## 🛡️ Disclaimer
-This repository is intended for internal research and demonstration purposes only. It is not intended for public use or distribution. All models are subject to formal validation and approval before production deployment.
+[Add contribution guidelines here]
