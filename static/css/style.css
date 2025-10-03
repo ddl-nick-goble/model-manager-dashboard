@@ -729,11 +729,11 @@ button.disabled {
 }
 
 .sparkline.sparkline-good {
-    color: #10b981;
+    color: #0f7a4f;
 }
 
 .sparkline.sparkline-bad {
-    color: #ef4444;
+    color: #9b1c1c;
 }
 
 .sparkline.sparkline-neutral {
@@ -747,11 +747,11 @@ button.disabled {
 }
 
 .sparkline-value.trend-up {
-    color: #10b981;
+    color: #0f7a4f;
 }
 
 .sparkline-value.trend-down {
-    color: #ef4444;
+    color: #9b1c1c;
 }
 
 .sparkline-value.trend-neutral {
@@ -1016,18 +1016,13 @@ button.disabled {
 }
 
 .status-indicator.status-good {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.status-indicator.status-normal {
-    background: #fef3c7;
-    color: #92400e;
+    background: #e8faf2;
+    color: #0f7a4f;
 }
 
 .status-indicator.status-warning {
-    background: #fee2e2;
-    color: #991b1b;
+    background: #fdecec;
+    color: #9b1c1c;
 }
 
 

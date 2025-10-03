@@ -210,9 +210,19 @@ function createSparkline(data) {
         trendClass = 'trend-down';
     }
     
+    const fillColor = latestValue >= 80 ? '#e8faf2' : '#fdecec';
+    
+    // Create polygon points for filled area (add baseline points)
+    const polygonPoints = points + ` ${width - padding},${height - padding} ${padding},${height - padding}`;
+    
     return `
         <div class="sparkline-card">
             <svg width="${width}" height="${height}" class="sparkline ${colorClass}">
+                <polygon
+                    points="${polygonPoints}"
+                    fill="${fillColor}"
+                    stroke="none"
+                />
                 <polyline
                     points="${points}"
                     fill="none"
