@@ -3,7 +3,6 @@
    - Tokenized
    - Focus-visible & motion prefs
    - Subtle elevation & rounded
-   - Dark-mode hooks (optional)
    ========================= */
 
 /* ---------- Design tokens ---------- */
@@ -50,29 +49,6 @@
   --focus: 2px solid color-mix(in srgb, var(--brand) 60%, white);
 
   color-scheme: light;
-}
-
-/* Optional dark mode hook */
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #0d1117;
-    --panel: #0f141c;
-    --text: #e6edf3;
-    --muted: #9aa4b2;
-    --border: #1f2733;
-    --subtle: #1f2733;
-    --subtle-2: #131a23;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
-    --shadow-md: 0 8px 24px rgba(0,0,0,.4);
-    /* Keep semantic colors but slightly deepen */
-    --ok-bg:#0b2e25; --ok-fg:#61d3a4;
-    --warn-bg:#2b210e; --warn-fg:#f9c76b;
-    --info-bg:#0e1a33; --info-fg:#7da6ff;
-    --hold-bg:#2b180e; --hold-fg:#f2a36e;
-    --stop-bg:#2a1010; --stop-fg:#ff9b9b;
-    --pill-bg:#1a1f34; --pill-fg:#9aa7ff;
-    color-scheme: light;
-  }
 }
 
 /* ---------- Resets & base ---------- */
@@ -725,48 +701,4 @@ button.disabled {
 
 .expandable-content .actions-row .security-scan-btn {
     margin-left: 10px;
-}
-
-/* Dark mode support (if your app uses it) */
-@media (prefers-color-scheme: dark) {
-    .security-scan-container {
-        background-color: #2c3e50;
-        border-color: #34495e;
-    }
-    
-    .security-scan-results h4 {
-        color: #ecf0f1;
-        border-bottom-color: #3498db;
-    }
-    
-    .scan-summary {
-        background-color: #34495e;
-        border-color: #4a5f7a;
-    }
-    
-    .stat-value {
-        color: #ecf0f1;
-    }
-    
-    .issues-list {
-        background-color: #34495e;
-        border-color: #4a5f7a;
-    }
-    
-    .issue-item {
-        border-bottom-color: #4a5f7a;
-    }
-    
-    .issue-title {
-        color: #ecf0f1;
-    }
-    
-    .issue-file {
-        background-color: #2c3e50;
-        color: #bdc3c7;
-    }
-    
-    .issue-message {
-        color: #bdc3c7;
-    }
 }
