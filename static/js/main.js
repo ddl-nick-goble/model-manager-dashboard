@@ -429,7 +429,7 @@ function renderTable() {
                                                 </svg>
                                                 <div class="stepline-labels">
                                                     ${model.exceptionsArray.map((_, idx) => `
-                                                        <div class="stepline-label">${-1*(model.exceptionsArray.length - idx - 0)}d</div>
+                                                        <div class="stepline-label">${-1*(model.exceptionsArray.length - idx - 1)}d</div>
                                                     `).join('')}
                                                 </div>
                                             </div>
