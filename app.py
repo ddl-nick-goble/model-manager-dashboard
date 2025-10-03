@@ -28,6 +28,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 from flask import Flask, render_template, request, Response, jsonify
 import logging
+from model_data import model_data
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -606,7 +607,7 @@ def safe_domino_config():
 
 @app.route("/")
 def home():
-    return render_template("index.html", DOMINO=safe_domino_config())
+    return render_template("index.html", DOMINO=safe_domino_config(), MODELDATA=model_data)
 
 @app.route("/original")
 def original():
