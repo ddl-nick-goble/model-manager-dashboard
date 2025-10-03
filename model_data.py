@@ -4,7 +4,7 @@
 # Notes: ~10% of entries are On Hold; risk scores avg ≈7; utilization avg ≈8.
 
 model_data = [{'days_noncompliant': 6,
-  'exceptions': [0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  'exceptions': [0, 0, 0, 0, 1, 2, 3, 2, 0, 1],
   'model_health': [98, 99, 100, 99, 100, 99, 100, 98, 99, 100, 100, 99, 98, 100, 99, 100, 99, 98, 100, 99, 100, 100, 99, 98, 99, 100, 100, 99, 98, 100],
   'name': 'Vine Copula Risk Aggregator',
   'next_validation': 18,

@@ -1020,6 +1020,11 @@ button.disabled {
     color: #0f7a4f;
 }
 
+.status-indicator.status-normal {
+    background: #fef3c7;
+    color: #92400e;
+}
+
 .status-indicator.status-warning {
     background: #fdecec;
     color: #9b1c1c;
