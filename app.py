@@ -45,6 +45,7 @@ logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
 
 DOMINO_DOMAIN = os.environ.get("DOMINO_DOMAIN", "")
 DOMINO_API_KEY = os.environ.get("DOMINO_API_KEY", "")
+print('apikey', DOMINO_API_KEY)
 
 logger.info(f"DOMINO_DOMAIN: {DOMINO_DOMAIN}")
 logger.info(f"DOMINO_API_KEY: {'***' if DOMINO_API_KEY else 'NOT SET'}")
@@ -339,9 +340,95 @@ def security_scan_model():
         timeout_sec = int(body.get("timeoutSec", 300))
         semgrep_config = body.get("semgrepConfig", DEFAULT_SEMGREP_CONFIG)
 
-        if not model_name or version is None:
-            return jsonify({"error": "modelName and version are required"}), 400
+        # NEW: local scanning options
+        use_local = bool(body.get("useLocal", True))
+        local_path = body.get("localPath", ".")  # default to current working dir
 
+        # Validation
+        if not use_local:
+            # Original contract requires model_name and version when scanning remote model
+            if not model_name or version is None:
+                return jsonify({"error": "modelName and version are required for remote scans"}), 400
+        else:
+            # If using local scan, ensure the path exists and is a directory
+            if not local_path:
+                return jsonify({"error": "localPath must be provided when useLocal is true"}), 400
+            # Prevent absolute path scanning unless intentional (optional guard)
+            # You can harden this check if needed (e.g. require path under a specific base)
+            if not os.path.exists(local_path) or not os.path.isdir(local_path):
+                return jsonify({"error": f"localPath does not exist or is not a directory: {local_path}"}), 400
+
+        # Helper: enumerate local files matching include/exclude regexes
+        def enumerate_local_files(base_dir: str, include_pattern: Optional[str], exclude_pattern: Optional[str], limit: int):
+            include_re = None if not include_pattern or include_pattern in (".*", "*", "ALL") else re.compile(include_pattern)
+            exclude_re = re.compile(exclude_pattern) if exclude_pattern else None
+
+            matches = []
+            for root, dirs, files in os.walk(base_dir):
+                # allow excluding directories early
+                if exclude_re:
+                    # modify dirs in-place to avoid descending into excluded directories
+                    dirs[:] = [d for d in dirs if not exclude_re.search(os.path.join(root, d) + os.sep)]
+                for fname in files:
+                    rel_path = os.path.relpath(os.path.join(root, fname), base_dir)
+                    if exclude_re and exclude_re.search(rel_path):
+                        continue
+                    if include_re is None or include_re.search(rel_path):
+                        matches.append(rel_path)
+                        if len(matches) >= limit:
+                            return matches
+            return matches
+
+        if use_local:
+            # Local scan path: skip Domino API calls completely
+            repo_dir = os.path.abspath(local_path)
+            logger.info(f"Using local path for scan: {repo_dir}")
+
+            file_paths = enumerate_local_files(repo_dir, file_regex, exclude_regex, max_files)
+            if not file_paths:
+                return jsonify({"error": "No files to scan after filtering", "regex": file_regex, "excludeRegex": exclude_regex}), 404
+
+            # Run semgrep against the provided directory
+            try:
+                logger.info(f"Starting semgrep scan (local dir) on {len(file_paths)} files in {repo_dir}")
+                semgrep_raw = run_semgrep_scan(repo_dir, config=semgrep_config, timeout_sec=timeout_sec)
+            except Exception as e:
+                logger.exception("Semgrep failed for local scan")
+                return jsonify({"error": f"Semgrep failed: {e}"}), 500
+
+            summary = summarize_semgrep(semgrep_raw)
+
+            result = {
+                "summary": summary,
+                "model": {
+                    # for local scans, we do not have registered model metadata
+                    "modelName": model_name or "local-scan",
+                    "modelVersion": version or "local",
+                    "project": {"id": None, "name": None},
+                    "git": {"commit": None},
+                },
+                "scan": {
+                    "total": summary["total_issues"],
+                    "high": summary["high"],
+                    "medium": summary["medium"],
+                    "low": summary["low"],
+                    "file_count_scanned": len(file_paths),
+                    "file_regex": file_regex,
+                    "exclude_regex": exclude_regex,
+                    "duration_sec": round(time.time() - t0, 3),
+                    "scanned_path": repo_dir,
+                },
+            }
+            if include_issues:
+                result["issues"] = summary["issues"]
+            if include_metrics:
+                result["metrics"] = summary.get("metrics")
+
+            return jsonify(result)
+
+        # -------------------------------------------------------------
+        # Original Domino-backed flow below (unchanged except minor cleanup)
+        # -------------------------------------------------------------
         dc = DominoClient(DOMINO_DOMAIN, DOMINO_API_KEY)
 
         # 1) Registered model version → commit, experimentRunId, project info
