@@ -199,7 +199,7 @@ tr:last-child td { border-bottom: none; }
 }
 
 .status-production { background: var(--ok-bg);   color: var(--ok-fg);   border-color: color-mix(in srgb, var(--ok-fg) 20%, transparent); }
-.status-testing    { background: var(--warn-bg); color: var(--warn-fg); border-color: color-mix(in srgb, var(--warn-fg) 18%, transparent); }
+.status-uat    { background: var(--warn-bg); color: var(--warn-fg); border-color: color-mix(in srgb, var(--warn-fg) 18%, transparent); }
 .status-development{ background: var(--info-bg); color: var(--info-fg); border-color: color-mix(in srgb, var(--info-fg) 18%, transparent); }
 .status-on-hold    { background: var(--hold-bg); color: var(--hold-fg); border-color: color-mix(in srgb, var(--hold-fg) 18%, transparent); }
 .status-deprecated { background: var(--stop-bg); color: var(--stop-fg); border-color: color-mix(in srgb, var(--stop-fg) 18%, transparent); }
@@ -284,7 +284,7 @@ tr:last-child td { border-bottom: none; }
 .action-btn:hover { background: var(--subtle-2); border-color: color-mix(in srgb, var(--border) 60%, var(--brand)); }
 .action-btn.expanded { background: var(--brand); color: white; border-color: var(--brand); }
 .arrow { transition: transform .15s ease; font-size: 10px; }
-.arrow.rotated { transform: rotate(180deg); }
+.arrow.rotated { transform: rotate(90deg); }
 
 button:disabled,
 button.disabled {

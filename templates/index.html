@@ -22,8 +22,8 @@
             <nav class="nav-tabs">
                 <button class="tab active" data-filter="all">All Models</button>
                 <button class="tab" data-filter="production">Production</button>
+                <button class="tab" data-filter="uat">UAT</button>
                 <button class="tab" data-filter="development">Development</button>
-                <button class="tab" data-filter="testing">Testing</button>
                 <button class="tab" data-filter="on hold">On Hold</button>
             </nav>
 
@@ -33,19 +33,16 @@
                 <table>
                     <thead>
                         <tr>
-                                <th>Application Name</th>
-                                <th>Application Type</th>
-                                <th>Service Level</th>
-                                <th>Significance Risk Score</th>
-                                <th>Usage Risk Score</th>
-                                <th>Complexity Risk Score</th>
-                                <th>User Type</th>
-                                <th>Output Authorization</th>
-                                <th>Expiry Date</th>
-                                <th>Security Classification</th>
-                                <th>EU AI Act Risk Level</th>
-                                <th>Model Health</th>
                                 <th></th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Stage</th>
+                                <th>Risk Score</th>
+                                <th>Utilization Score</th>
+                                <th>Exceptions</th>
+                                <th>Days Non-Compliant</th>
+                                <th>Next Validation</th>
+                                <th>Model Health</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,6 +55,7 @@
     <script>
       // POC runtime config injected by Flask
       window.DOMINO = {{ DOMINO | tojson }};
+      window.MODELDATA = {{ MODELDATA | tojson }};
     </script>
     <script type="text/javascript" src="./static/js/main.js"></script>
 </body>
